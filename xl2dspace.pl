@@ -16,17 +16,10 @@ my $handle_base   = '1';
 my $collection_id = '1';
 my $eperson_email = 'dspace@localhost';
 
-unless ( $ARGV[0] ) { die "USAGE: $0 <Excel_file>\n\n"; exit; }
-
-my $book;
-unless ( $book = ReadData( $ARGV[0] ) ) {
-    die "No input Excel file.\n";
-}
-
-# First sheet
-my $sheet = $book->[1];
+unless ( $ARGV[0] ) { die "USAGE: $0 <Spreadsheet_file>\n\n"; exit; }
+my $book  = ReadData( $ARGV[0] );
+my $sheet = $book->[1];             # First sheet
 warn "total cols: $sheet->{maxcol}\ntotal rows: $sheet->{maxrow}\n";
-my @header_row = Spreadsheet::Read::row( $sheet, 1 );
 
 # prepare import dir
 unless ( -d $import_dir ) {
@@ -37,21 +30,23 @@ unless ( -d $coll_dir ) {
     mkdir($coll_dir) or die "Couldn't create $coll_dir directory, $!";
 }
 
-# Update upload script
-# 	bin/dspace import --add --eperson=joe@user.com --collection=1234/12 --source=Col_12 --mapfile=mapfile
-open( UPLOAD, ">>$import_dir/upload.sh" );
+# Create upload script
+#  bin/dspace import --add --eperson=joe@user.com --collection=1234/12 --source=Col_12 --mapfile=mapfile
+open( UPLOAD, ">$import_dir/upload.sh" );
 print UPLOAD $dspace_dir
   . '/bin/dspace import --add --eperson='
-  . $eperson_email;
-print UPLOAD ' --collection='
+  . $eperson_email
+  . ' --collection='
   . $handle_base . '/'
   . $collection_id
   . ' --source=Col_'
-  . $collection_id;
-print UPLOAD ' --mapfile=mapfile_col_' . $collection_id . "\n";
+  . $collection_id
+  . ' --mapfile=mapfile_col_'
+  . $collection_id . "\n";
 close(UPLOAD);
 
 # Data rows
+my @header_row = Spreadsheet::Read::row( $sheet, 1 );
 my ( $rec_num, $item_num ) = ( 0, 0 );
 for my $row_id ( 2 .. $sheet->{maxrow} ) {
     my @row = Spreadsheet::Read::row( $sheet, $row_id );
@@ -118,8 +113,7 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     $writer->endTag("dublin_core");
     $writer->end();
     $output->close();
-    
-    
+
     # files & manifest
     open( MANIFEST, ">$item_dir/contents" );
 
