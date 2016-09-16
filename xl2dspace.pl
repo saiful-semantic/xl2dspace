@@ -13,7 +13,7 @@ use File::Copy qw(copy);
 my $import_dir    = './tmp/import';
 my $dspace_dir    = '/opt/dspace';
 my $handle_base   = '1';
-my $collection_id = '1';
+my $collection_id = '2';
 my $eperson_email = 'dspace@localhost';
 
 unless ( $ARGV[0] ) { die "USAGE: $0 <Spreadsheet_file>\n\n"; exit; }
@@ -23,11 +23,11 @@ warn "total cols: $sheet->{maxcol}\ntotal rows: $sheet->{maxrow}\n";
 
 # prepare import dir
 unless ( -d $import_dir ) {
-    mkdir($import_dir) or die "Couldn't create $import_dir directory, $!";
+    mkdir($import_dir) or die "Couldn't create $import_dir directory, $!\n";
 }
 my $coll_dir = $import_dir . '/Col_' . $collection_id;
 unless ( -d $coll_dir ) {
-    mkdir($coll_dir) or die "Couldn't create $coll_dir directory, $!";
+    mkdir($coll_dir) or die "Couldn't create $coll_dir directory, $!\n";
 }
 
 # Create upload script
@@ -54,7 +54,8 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     $item_num++;
 
     # Item directory
-    my $item_dir = $coll_dir . '/item_' . leftpad_zero( $item_num, 3 );
+#    my $item_dir = $coll_dir . '/item_' . leftpad_zero( $item_num, 3 );
+    my $item_dir = $coll_dir . '/item_' . sprintf("%03d", $item_num);
     unless ( -d $item_dir ) {
         mkdir($item_dir) or die "Couldn't create $item_dir directory, $!";
     }
@@ -130,14 +131,6 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     close(MANIFEST);
 
     warn "$rec_num records\n" if ( $rec_num % 100 == 0 );
-}
-
-sub leftpad_zero {
-    my ( $string, $len ) = @_;
-    if ( length $string < $len ) {
-        return '0' x ( $len - length $string ) . $string;
-    }
-    return $string;
 }
 
 # convert string to array by delimiter
