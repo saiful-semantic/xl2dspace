@@ -54,7 +54,6 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     $item_num++;
 
     # Item directory
-#    my $item_dir = $coll_dir . '/item_' . leftpad_zero( $item_num, 3 );
     my $item_dir = $coll_dir . '/item_' . sprintf("%03d", $item_num);
     unless ( -d $item_dir ) {
         mkdir($item_dir) or die "Couldn't create $item_dir directory, $!";
@@ -67,7 +66,7 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     $writer->startTag( 'dublin_core', "schema" => 'dc' );
 
     my $file = undef;
-  FIELD: for my $col ( 1 .. $sheet->{maxcol} ) {
+  FIELD: for my $col ( 0 .. $sheet->{maxcol} ) {
         next unless $row[$col];
         my $dc_field = $header_row[$col];
 
