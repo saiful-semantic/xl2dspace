@@ -9,6 +9,8 @@ use Spreadsheet::Read;
 use XML::Writer;
 use IO::File;
 use File::Copy qw(copy);
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+use Archive::Zip::Tree;
 
 my $import_dir    = './import';
 my $dspace_dir    = '/opt/dspace';
@@ -119,6 +121,12 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     close(MANIFEST);
 
     warn "$rec_num records\n" if ( $rec_num % 100 == 0 );
+}
+
+my $zip = Archive::Zip->new();
+$zip->addTree( $coll_dir, 'collection_1' );
+unless ( $zip->writeToFileNamed( $import_dir . '/archive.zip') == AZ_OK ) {
+	die "Error creating archive.zip file: $!\n";
 }
 
 # convert string to array by delimiter
