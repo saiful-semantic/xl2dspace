@@ -10,7 +10,7 @@ use XML::Writer;
 use IO::File;
 use File::Copy qw(copy);
 
-my $import_dir    = './tmp/import';
+my $import_dir    = './import';
 my $dspace_dir    = '/opt/dspace';
 my $handle_base   = '1';
 my $collection_id = '2';
@@ -68,43 +68,32 @@ for my $row_id ( 2 .. $sheet->{maxrow} ) {
     my $file = undef;
   FIELD: for my $col ( 0 .. $sheet->{maxcol} ) {
         next unless $row[$col];
-        my $dc_field = $header_row[$col];
+        my ($dc_field, $qualifier, $delimiter) = parse_header($header_row[$col]);
+        next unless $dc_field;
 
         if ( $dc_field eq 'filename' ) {
             $file = $row[$col];
             next FIELD;
         }
-
-        $dc_field =~ s/^dc\.//;
-        my $qualifier = 'none';
-        ( $dc_field, $qualifier ) = split /\./, $dc_field if $dc_field =~ /\./;
-
+        
         # Repeatable fields
-        if ( $dc_field =~ /^creator$/i ) {
-            my @authors = get_array( $row[$col], ';' );
-            foreach my $creator (@authors) {
+        if ( $delimiter ) {
+            my @all_values = get_array( $row[$col], $delimiter );
+            foreach my $value (@all_values) {
+                $value =~ s/^\s*//; # cleanup, just in case.
                 $writer->dataElement(
-                    'dcvalue', $creator,
-                    element   => 'creator',
-                    qualifier => 'none'
+                    'dcvalue', $value,
+                    element   => $dc_field,
+                    qualifier => $qualifier
                 );
             }
         }
-        elsif ( $dc_field =~ /^subject$/i ) {
-            my @subjects = get_array( $row[$col], ',' );
-            foreach my $keyword (@subjects) {
-                $writer->dataElement(
-                    'dcvalue', $keyword,
-                    element   => 'subject',
-                    qualifier => 'none'
-                );
-            }
-        }
+        # Non-repeatable ones
         else {
             $writer->dataElement(
                 'dcvalue', $row[$col],
-                element   => lc($dc_field),
-                qualifier => lc($qualifier)
+                element   => $dc_field,
+                qualifier => $qualifier
             );
         }
 
@@ -143,4 +132,18 @@ sub get_array {
         push @array, $str;
     }
     return @array;
+}
+
+sub parse_header {
+    my $field = shift;
+    $field =~ s/^dc\.//;
+    
+    my $delimit = '';
+    if ($field =~ /^([^\(]+)\s*\((.+)\)$/) {
+        ($field, $delimit) = ($1, $2);
+    }
+    
+    my $qualifier = 'none';
+    ($field, $qualifier ) = split /\./, $field if $field =~ /\./;
+    return (lc($field), lc($qualifier), $delimit);
 }
