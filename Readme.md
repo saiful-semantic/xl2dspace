@@ -1,3 +1,8 @@
+
+**This project is unmaintained. Use [XL2SAF](https://github.com/semanticlib/xl2saf) instead.**
+
+----
+
 Converts Spreadsheet into [Simple Archive Format](https://wiki.duraspace.org/display/DSPACE/Simple+Archive+Format+Packager) for importing into DSpace.
 
 Requires following Perl modules:
